@@ -1,0 +1,76 @@
+pip install XRPL- Py
+
+
+import time
+import random
+from xrpl.clients import JsonRpcClient
+from xrpl.wallet import generate_faucet_wallet
+from xrpl.models.transactions import Payment
+from xrpl.transaction import submit_and_wait
+
+# --- CONFIGURATION ---
+# Using the XRP Testnet for safety
+JSON_RPC_URL = "https://s.altnet.rippletest.net:51234"
+client = JsonRpcClient(JSON_RPC_URL)
+
+class CoolingRobotAI:
+    def __init__(self, threshold_temp=75.0):
+        self.threshold = threshold_temp
+        self.wallet = generate_faucet_wallet(client, debug=True)
+        print(f"Cooling Robot Online. Wallet Address: {self.wallet.classic_address}")
+
+    def monitor_systems(self, systems):
+        """
+        Scans robots, generators, and solar arrays for overheating.
+        """
+        for name, data in systems.items():
+            current_temp = data['temp']
+            print(f"[SCAN] {name}: {current_temp}°C")
+            
+            if current_temp > self.threshold:
+                self.activate_cooldown(name, current_temp, data['owner_address'])
+
+    def activate_cooldown(self, target_name, temp, owner_address):
+        """
+        Logic to 'cool down' the system and charge for the service via XRPL.
+        """
+        print(f"!!! ALERT: {target_name} is too hot ({temp}°C). Initiating Cooldown...")
+        
+        # Simulate cooling action (e.g., increasing fan speed or coolant flow)
+        time.sleep(1) 
+        print(f"[ACTION] Fans maxed for {target_name}. Temperature dropping...")
+
+        # Request payment for 'Cooling as a Service' (CaaS)
+        self.request_xrpl_payment(owner_address, amount_drops="1000000") # 1 XRP = 1,000,000 drops
+
+    def request_xrpl_payment(self, sender_address, amount_drops):
+        """
+        In a real scenario, this would trigger a payment request.
+        Here we demonstrate how to send a transaction on the ledger.
+        """
+        print(f"[XRPL] Processing transaction: {amount_drops} drops for cooling services.")
+        # Note: Actual transaction requires the sender's secret key.
+        # This is where the 'Smart Contract' logic would live.
+        pass
+
+# --- SIMULATION ---
+if __name__ == "__main__":
+    # Threshold based on your heater/environmental needs
+    bot = CoolingRobotAI(threshold_temp=80.0)
+
+    # Simulated Assets
+    assets = {
+        "Android_Unit_01": {"temp": 45.5, "owner_address": "rPT1S..."},
+        "Diesel_Generator": {"temp": 92.3, "owner_address": "rHb9C..."},
+        "Solar_Inverter_Array": {"temp": 88.1, "owner_address": "r3kmB..."}
+    }
+
+    try:
+        while True:
+            bot.monitor_systems(assets)
+            # Update temps randomly for simulation
+            for a in assets:
+                assets[a]['temp'] += random.uniform(-5, 5)
+            time.sleep(5)
+    except KeyboardInterrupt:
+        print("Cooling Robot Shutting Down.")
