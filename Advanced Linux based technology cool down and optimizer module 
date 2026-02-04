@@ -1,0 +1,48 @@
+import os
+import time
+import psutil
+
+# Configuration for Thermal Thresholds
+MAX_TEMP_CELSIUS = 65  # Trigger cooldown
+COOLDOWN_SLEEP = 10    # Seconds to throttle
+
+def get_thermal_state():
+    # Reads system thermal files (Linux standard)
+    try:
+        with open("/sys/class/thermal/thermal_zone0/temp", "r") as f:
+            temp = int(f.read()) / 1000
+            return temp
+    except FileNotFoundError:
+        return None
+
+def apply_hyper_cooldown():
+    print("⚠️ Thermal Limit Reached. Initiating Cooldown Protocols...")
+    
+    # 1. Throttle CPU Frequency (Requires root/sudo)
+    os.system("cpupower frequency-set -g powersave")
+    
+    # 2. Kill high-resource background 'zombie' processes
+    for proc in psutil.process_iter(['pid', 'name', 'cpu_percent']):
+        if proc.info['cpu_percent'] > 50.0:
+            print(f"Throttling resource-heavy task: {proc.info['name']}")
+            proc.suspend() # Pauses the process instead of killing it
+
+def restore_performance():
+    os.system("cpupower frequency-set -g performance")
+    for proc in psutil.process_iter():
+        try:
+            proc.resume()
+        except:
+            pass
+
+def main_loop():
+    while True:
+        current_temp = get_thermal_state()
+        if current_temp and current_temp > MAX_TEMP_CELSIUS:
+            apply_hyper_cooldown()
+            time.sleep(COOLDOWN_SLEEP)
+            restore_performance()
+        time.sleep(5)
+
+if __name__ == "__main__":
+    main_loop()
